@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:jaxws="http://cxf.apache.org/jaxws"
+    xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://cxf.apache.org/jaxws http://cxf.apache.org/schemas/jaxws.xsd
+        http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd">
+	
+	
+	<!-- 私有配置文件资源 -->
+	<bean id="private_env_file_resource" class="com.here.framework.config.FileResourceFactory">
+		<property name="filePath">
+			<value>env/config/_env.js</value>
+		</property>
+	</bean>
+	
+	
+	<!-- fastdfs 文件配置 -->
+	<bean id="fastDfsConfig"  class="com.here.framework.config.ConfigFactory">
+ 		<property name="configFile" ref="private_env_file_resource">
+		</property>
+		<property name="name">
+			<value>fdfsConfig</value>
+		</property>
+		<property name="className">
+			<value>com.here.framework.core.config.FastDfsConfig</value>
+		</property>
+ 	</bean>
+ 	<!-- fastdfs 客户端配置 -->
+ 	<bean id="fdfsClientConfig" class="com.here.framework.core.file.fdfs.FdfsClientConfig">
+ 		<constructor-arg ref="fastDfsConfig"></constructor-arg>
+ 	</bean>
+ 	<!-- fastdfs 客户端 -->
+	<bean id="fastDfsClient" class="com.here.framework.core.file.fdfs.FastDfsClient">
+		<constructor-arg ref="fdfsClientConfig"></constructor-arg>
+	</bean>
+	<!-- 文件服务注册 -->
+	<bean class="com.here.framework.service.ServiceRegister">
+		<property name="serviceBean">
+			<!-- 文件服务 -->
+			<bean id="fileService" class="com.here.virtualspace.file.service.impl.DfsFileServiceImpl">
+				<property name="dfsClient" ref="fastDfsClient"></property>
+			</bean>
+		</property>
+	</bean>
+	
+	
+	<!-- activeMQ 配置文件 -->
+	<bean id="activeMQConfig"  class="com.here.framework.config.ConfigFactory">
+ 		<property name="configFile" ref="private_env_file_resource">
+		</property>
+		<property name="name">
+			<value>mqConfig</value>
+		</property>
+		<property name="className">
+			<value>com.here.framework.core.config.MQConfig</value>
+		</property>
+ 	</bean>
+ 	<!-- activeMQ 发送消息代理 -->
+ 	<bean id="activeSendMQProxy" class="com.here.framework.core.mq.activemq.ActiveMQProxy">
+ 		<constructor-arg ref="activeMQConfig"></constructor-arg>
+ 	</bean>
+ 	<!-- 加入实例管理 -->
+	<bean class="com.here.framework.bean.InstanceManager.Register">
+		<constructor-arg ref="activeSendMQProxy"></constructor-arg>
+	</bean>
+ 	
+ 	<!-- activeMQ 发送消息代理 -->
+ 	<bean id="activeReceiveMQProxy" class="com.here.framework.core.mq.activemq.ActiveMQProxy">
+ 		<constructor-arg ref="activeMQConfig"></constructor-arg>
+ 	</bean>
+ 	<!-- 队列监听器 -->
+ 	<bean id="defaultQueueListenerManager" class="com.here.framework.core.mq.QueueListenerManager">
+ 		<constructor-arg index="0" ref="activeReceiveMQProxy"></constructor-arg>
+ 	</bean>
+ 	<!-- 加入实例管理 -->
+	<bean class="com.here.framework.bean.InstanceManager.Register">
+		<constructor-arg ref="defaultQueueListenerManager"></constructor-arg>
+	</bean>
+ 	
+ 	<!-- freeMarker 配置文件注册 -->
+ 	
+ 	<bean id="freeMarkerConfig"  class="com.here.framework.config.ConfigFactory">
+ 		<property name="configFile">
+ 			<value>env/config/_env_freemarker.js</value>
+		</property>
+		<property name="name">
+			<value>freeMarkerConfig</value>
+		</property>
+		<property name="className">
+			<value>com.here.framework.core.config.FreeMarkerConfig</value>
+		</property>
+ 	</bean>
+ 	<bean id="defaultFreemarkerConfiguration" class="com.here.framework.core.template.freemarker.FreeMarkerConfiguration">
+ 		<constructor-arg index="0" ref="freeMarkerConfig"></constructor-arg>
+ 	</bean>
+ 	<!-- 加入实例管理 -->
+	<bean class="com.here.framework.bean.InstanceManager.Register">
+		<constructor-arg ref="defaultFreemarkerConfiguration"></constructor-arg>
+	</bean>
+ 	
+ 	<!-- 邮件配置 -->
+ 	<bean id="emailConfig"  class="com.here.framework.config.ConfigFactory">
+ 		<property name="configFile" ref="private_env_file_resource">
+		</property>
+		<property name="name">
+			<value>emailConfig</value>
+		</property>
+		<property name="className">
+			<value>com.here.framework.core.config.EmailConfig</value>
+		</property>
+ 	</bean>
+ 	<bean id="defaultMailSender" class="com.here.framework.core.mail.HMailSender">
+ 		<constructor-arg ref="emailConfig"></constructor-arg>
+ 	</bean>
+ 	<!-- 加入实例管理 -->
+	<bean class="com.here.framework.bean.InstanceManager.Register">
+		<constructor-arg ref="defaultMailSender"></constructor-arg>
+	</bean>
+ 	
+ 	
+ 	
+ 	
+ 	<bean id="redisConfig_business"  class="com.here.framework.config.ConfigFactory">
+ 		<property name="configFile" ref="private_env_file_resource">
+		</property>
+		<property name="name">
+			<value>redisConfig_business</value>
+		</property>
+		<property name="className">
+			<value>com.here.framework.core.config.RedisConfig</value>
+		</property>
+ 	</bean>
+ 	
+ 	<!-- 加入实例管理 -->
+	<bean id="redis_pool_business" class="com.here.framework.core.redis.RedisPool">
+		<constructor-arg ref="redisConfig_business"></constructor-arg>
+	</bean>
+	
+	<!-- 实例注册 -->
+	<bean class="com.here.framework.bean.InstanceManager.Register">
+		<constructor-arg index="0" value="redisConfig_business"></constructor-arg>
+		<constructor-arg index="1" ref="redis_pool_business"></constructor-arg>
+	</bean>
+	
+ 	<bean id="redisConfig_session"  class="com.here.framework.config.ConfigFactory">
+ 		<property name="configFile" ref="private_env_file_resource">
+		</property>
+		<property name="name">
+			<value>redisConfig_session</value>
+		</property>
+		<property name="className">
+			<value>com.here.framework.core.config.RedisConfig</value>
+		</property>
+ 	</bean>
+ 	<!-- 加入实例管理 -->
+	<bean id="redis_pool_session" class="com.here.framework.core.redis.RedisPool">
+		<constructor-arg ref="redisConfig_session"></constructor-arg>
+	</bean>
+	
+	<!-- 实例注册 -->
+	<bean class="com.here.framework.bean.InstanceManager.Register">
+		<constructor-arg index="0" value="redisConfig_session"></constructor-arg>
+		<constructor-arg index="1" ref="redis_pool_session"></constructor-arg>
+	</bean>
+ 	
+</beans>
