@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.demo.service.mapper.TestMapper;
 import com.here.framework.service.BaseService;
+import com.here.framework.util.JSONUtil;
 
 /**
  * service demo
@@ -44,6 +45,13 @@ public class DemoServiceImpl extends BaseService implements DemoService{
 	public List<Map<String, String>> getAll() {
 		TestMapper mapper=getMapper(TestMapper.class);
 		return mapper.getAll();
+	}
+
+	@Override
+	public String addBean(DemoBean bean, List<PersonDemo> persons) {
+		// TODO Auto-generated method stub
+		System.out.println(JSONUtil.toJson(bean));
+		return JSONUtil.toJson(persons);
 	}
 
 
